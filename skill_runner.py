@@ -10,6 +10,7 @@ Usage:
 import argparse
 import asyncio
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -20,6 +21,9 @@ from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
+
+# Default timeout in seconds for LiteLLM API calls
+DEFAULT_TIMEOUT = 120
 
 
 def parse_skill_md(skill_dir: Path) -> dict:
@@ -53,10 +57,11 @@ async def run_single_eval(
     eval_case: dict,
     skill_instruction: str,
     model: str,
+    timeout: int = DEFAULT_TIMEOUT,
 ) -> dict:
     """Run one eval case through the ADK agent and return raw output."""
     agent = LlmAgent(
-        model=LiteLlm(model=model),
+        model=LiteLlm(model=model, timeout=timeout),
         name="skill_agent",
         instruction=skill_instruction,
     )
@@ -92,6 +97,7 @@ async def grade_assertion(
     agent_output: str,
     original_prompt: str,
     model: str,
+    timeout: int = DEFAULT_TIMEOUT,
 ) -> dict:
     """Use LLM-as-judge to grade a single assertion against the agent output."""
     judge_instruction = (
@@ -104,7 +110,7 @@ async def grade_assertion(
     )
 
     judge_agent = LlmAgent(
-        model=LiteLlm(model=model),
+        model=LiteLlm(model=model, timeout=timeout),
         name="judge",
         instruction=judge_instruction,
     )
@@ -161,7 +167,7 @@ async def grade_assertion(
     }
 
 
-async def run_all_evals(skill_dir: str, model: str, output_path: str):
+async def run_all_evals(skill_dir: str, model: str, output_path: str, timeout: int = DEFAULT_TIMEOUT):
     """Main orchestration: run all evals, grade, compute metrics."""
     skill_data = parse_skill_md(Path(skill_dir))
     evals = load_evals(Path(skill_dir))
@@ -174,13 +180,13 @@ async def run_all_evals(skill_dir: str, model: str, output_path: str):
         print(f"  Running eval {eval_case['id']}...", file=sys.stderr)
 
         result = await run_single_eval(
-            eval_case, skill_data["instruction"], model
+            eval_case, skill_data["instruction"], model, timeout
         )
 
         assertion_results = []
         for assertion in eval_case.get("assertions", []):
             grade = await grade_assertion(
-                assertion, result["output"], eval_case["prompt"], model
+                assertion, result["output"], eval_case["prompt"], model, timeout
             )
             assertion_results.append(grade)
             total_assertions += 1
@@ -245,9 +251,15 @@ def main():
         default="run.txt",
         help="Path to write the JSON metrics output",
     )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=int(os.environ.get("LITELLM_TIMEOUT", DEFAULT_TIMEOUT)),
+        help=f"Timeout in seconds for LLM API calls (default: {DEFAULT_TIMEOUT}, or LITELLM_TIMEOUT env var)",
+    )
     args = parser.parse_args()
 
-    asyncio.run(run_all_evals(args.skill_dir, args.model, args.output))
+    asyncio.run(run_all_evals(args.skill_dir, args.model, args.output, args.timeout))
 
 
 if __name__ == "__main__":
