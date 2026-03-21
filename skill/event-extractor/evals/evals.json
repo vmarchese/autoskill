@@ -1,0 +1,86 @@
+{
+  "skill_name": "event-extractor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Extract the event details:\n\nJoin us for the Annual Tech Summit hosted by Innovate Corp on Saturday, June 14, 2025 from 9:00 AM to 5:00 PM at the San Francisco Convention Center, Hall B.",
+      "expected_output": "A JSON object with all five fields populated correctly.",
+      "assertions": [
+        "The output is valid JSON or contains a valid JSON code block",
+        "The JSON contains a 'title' field with a value like 'Annual Tech Summit'",
+        "The JSON contains a 'date' field that includes '2025-06-14' or 'June 14, 2025' or '06/14/2025'",
+        "The JSON contains a 'time' field that mentions '9:00 AM' or '9:00' and '5:00 PM' or '17:00'",
+        "The JSON contains a 'location' field mentioning 'San Francisco Convention Center'",
+        "The JSON contains an 'organizer' field mentioning 'Innovate Corp'"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Parse this into structured data:\n\nHey everyone! Quick reminder that our team retrospective is this Thursday at 3pm in the Birch conference room. — Sarah",
+      "expected_output": "A JSON object handling informal language, relative date, and an implicit organizer.",
+      "assertions": [
+        "The output is valid JSON or contains a valid JSON code block",
+        "The JSON contains a 'title' field with a value like 'team retrospective' or 'Team Retrospective'",
+        "The JSON contains a 'date' field that references Thursday or indicates the date could not be fully resolved",
+        "The JSON contains a 'time' field mentioning '3:00 PM' or '3pm' or '15:00'",
+        "The JSON contains a 'location' field mentioning 'Birch conference room'",
+        "The JSON contains an 'organizer' field mentioning 'Sarah'"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Extract event info:\n\nThe charity gala will be held at The Grand Ballroom, Hilton Downtown. Doors open at 6:30 PM. Black tie required.",
+      "expected_output": "A JSON object where missing fields (date, organizer) are handled gracefully with null or explicit 'not specified' values.",
+      "assertions": [
+        "The output is valid JSON or contains a valid JSON code block",
+        "The JSON contains a 'title' field with a value like 'charity gala' or 'Charity Gala'",
+        "The JSON contains a 'date' field that is null, 'null', 'N/A', 'not specified', or 'unknown' since no date was provided",
+        "The JSON contains a 'time' field mentioning '6:30 PM' or '18:30'",
+        "The JSON contains a 'location' field mentioning 'Grand Ballroom' and 'Hilton'",
+        "The JSON contains an 'organizer' field that is null, 'null', 'N/A', 'not specified', or 'unknown' since no organizer was mentioned",
+        "The output does not fabricate a date or organizer that was not in the input"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "What are the event details here?\n\nDr. Emily Zhao from MIT will deliver the keynote 'AI and the Future of Healthcare' on March 3rd, 2026 at 2:00 PM EST. The talk will take place in Auditorium 1, Building 32, MIT Campus, Cambridge MA. A networking reception follows at 4:00 PM in the adjacent lounge. RSVP to events@mit.edu.",
+      "expected_output": "A JSON object or array capturing the keynote event. Bonus: captures the reception as a second event.",
+      "assertions": [
+        "The output is valid JSON or contains a valid JSON code block",
+        "The JSON captures the keynote title 'AI and the Future of Healthcare'",
+        "The JSON contains a date referencing 'March 3' and '2026'",
+        "The JSON contains a time referencing '2:00 PM'",
+        "The JSON contains a location mentioning 'Auditorium 1' or 'Building 32' or 'MIT'",
+        "The JSON contains an organizer or speaker field mentioning 'Emily Zhao' or 'MIT'",
+        "The output mentions or captures the networking reception as a separate event or note"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Parse the event:\n\nWorkshop: Introduction to Watercolor Painting\nWhen: Every Tuesday in October, 10am–12pm\nWhere: Community Arts Center, Room 204\nInstructor: Maria Gonzalez\nFee: $150 for the series\nRegister at artscentre.org/workshops",
+      "expected_output": "A JSON object handling a recurring event with a date range rather than a single date.",
+      "assertions": [
+        "The output is valid JSON or contains a valid JSON code block",
+        "The JSON contains a 'title' field mentioning 'Introduction to Watercolor Painting' or 'Watercolor Painting'",
+        "The JSON contains a 'date' field that references 'every Tuesday in October' or 'Tuesdays in October' or lists the individual October Tuesdays",
+        "The JSON contains a 'time' field mentioning '10' and '12' in some format (10am-12pm, 10:00-12:00, etc.)",
+        "The JSON contains a 'location' field mentioning 'Community Arts Center' and 'Room 204'",
+        "The JSON contains an 'organizer' field mentioning 'Maria Gonzalez' (the instructor)"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Extract structured event data from this email:\n\nSubject: Board Meeting Rescheduled\n\nHi all,\n\nPlease note the Q2 board meeting has been moved from June 5 to June 12, 2025. Same time (10:00 AM) and place (HQ, 4th Floor Boardroom). Lunch will be provided.\n\nBest,\nJames Liu\nCorporate Secretary",
+      "expected_output": "A JSON object using the NEW date (June 12), not the old one. Should capture the organizer from the email signature.",
+      "assertions": [
+        "The output is valid JSON or contains a valid JSON code block",
+        "The JSON contains a 'title' field mentioning 'Board Meeting' or 'Q2 Board Meeting'",
+        "The JSON contains a 'date' field referencing 'June 12' or '2025-06-12' (the rescheduled date, NOT June 5)",
+        "The JSON date field does NOT use 'June 5' as the event date",
+        "The JSON contains a 'time' field mentioning '10:00 AM' or '10:00'",
+        "The JSON contains a 'location' field mentioning '4th Floor Boardroom' or 'HQ'",
+        "The JSON contains an 'organizer' field mentioning 'James Liu'"
+      ]
+    }
+  ]
+}

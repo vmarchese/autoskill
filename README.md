@@ -52,7 +52,7 @@ export AZURE_API_VERSION="2024-06-01"
 ## Usage
 
 ```bash
-# Run with defaults (text-summarizer skill, openai/gpt-4o-mini, 20 iterations)
+# Run with defaults (event-extractor skill, openai/gpt-4o-mini, 20 iterations)
 bash optimizer_loop.sh
 
 # Customize via environment variables
@@ -66,14 +66,14 @@ MODEL=azure/gpt-4o-mini bash optimizer_loop.sh
 
 ```bash
 source .venv/bin/activate
-python skill_runner.py --skill-dir skill/text-summarizer --model openai/gpt-4o-mini --output run.txt
+python skill_runner.py --skill-dir skill/event-extractor --model openai/gpt-4o-mini --output run.txt
 ```
 
 ## Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SKILL_DIR` | `skill/text-summarizer` | Path to the skill directory |
+| `SKILL_DIR` | `skill/event-extractor` | Path to the skill directory |
 | `MODEL` | `openai/gpt-4o-mini` | LiteLLM model string for both the skill agent and judge (see [Supported Models](#supported-models)) |
 | `MAX_ITERATIONS` | `20` | Maximum optimization iterations |
 | `PATIENCE` | `3` | Stop after this many iterations without improvement |
@@ -95,7 +95,7 @@ The `MODEL` variable accepts any [LiteLLM model string](https://docs.litellm.ai/
 ```
 autoskill/
 ├── skill/
-│   └── text-summarizer/        # Sample skill (optimization target)
+│   └── event-extractor/        # Sample skill: structured event data extraction
 │       ├── SKILL.md            # Skill instructions (what gets optimized)
 │       └── evals/
 │           └── evals.json      # Evaluation dataset with assertions

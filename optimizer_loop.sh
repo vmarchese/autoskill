@@ -4,7 +4,7 @@ set -euo pipefail
 # ============================================================
 # Configuration (override via environment variables)
 # ============================================================
-SKILL_DIR="${SKILL_DIR:-skill/text-summarizer}"
+SKILL_DIR="${SKILL_DIR:-skill/event-extractor}"
 MODEL="${MODEL:-openai/gpt-4o-mini}"
 MAX_ITERATIONS="${MAX_ITERATIONS:-20}"
 PATIENCE="${PATIENCE:-3}"
@@ -18,6 +18,13 @@ METRICS_FILE="run.txt"
 
 mkdir -p runs
 source .venv/bin/activate
+
+# ============================================================
+# Backup the original skill before any modifications
+# ============================================================
+BACKUP_DIR="runs/backup-${RUN_ID}"
+cp -r "$SKILL_DIR" "$BACKUP_DIR"
+echo "Original skill backed up to ${BACKUP_DIR}"
 
 # ============================================================
 # Helper: format per-eval results from metrics JSON into memory
