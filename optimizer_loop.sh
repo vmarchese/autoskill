@@ -15,16 +15,19 @@ PATIENCE="${PATIENCE:-3}"
 RUN_ID="$(date +%Y%m%d_%H%M%S)"
 MEMORY_FILE="runs/memory-${RUN_ID}.txt"
 METRICS_FILE="run.txt"
+SNAPSHOT_DIR="runs/snapshots-${RUN_ID}"
 
-mkdir -p runs
+mkdir -p runs "$SNAPSHOT_DIR"
 source .venv/bin/activate
 
 # ============================================================
 # Backup the original skill before any modifications
 # ============================================================
-BACKUP_DIR="runs/backup-${RUN_ID}"
-cp -r "$SKILL_DIR" "$BACKUP_DIR"
-echo "Original skill backed up to ${BACKUP_DIR}"
+cp -r "$SKILL_DIR" "$SNAPSHOT_DIR/iter-0-original"
+echo "Original skill backed up to ${SNAPSHOT_DIR}/iter-0-original"
+
+# Keep a copy of the "best" skill to restore from on revert
+BEST_SNAPSHOT="$SNAPSHOT_DIR/iter-0-original"
 
 # ============================================================
 # Helper: format per-eval results from metrics JSON into memory
@@ -80,9 +83,6 @@ best_pass_rate="$baseline"
     echo ""
 } | tee -a "$MEMORY_FILE"
 
-# Commit the baseline state
-git add -A && git commit -m "baseline: pass_rate=${baseline}" --allow-empty 2>/dev/null || true
-
 echo "Baseline pass_rate: ${baseline}"
 echo ""
 
@@ -113,30 +113,36 @@ for iteration in $(seq 1 "$MAX_ITERATIONS"); do
     current_passed=$(python3 -c "import json; d=json.load(open('${METRICS_FILE}')); print(f\"{d['passed']}/{d['total']}\")")
     echo "pass_rate: ${current_pass_rate} (best: ${best_pass_rate})"
 
-    # Step 3: Compare and decide
+    # Step 3: Save snapshot of this iteration's skill
+    iter_snapshot="$SNAPSHOT_DIR/iter-${iteration}"
+    cp -r "$SKILL_DIR" "$iter_snapshot"
+
+    # Step 4: Compare and decide
     improved=$(python3 -c "print('yes' if float('${current_pass_rate}') > float('${best_pass_rate}') else 'no')")
 
     if [ "$improved" = "yes" ]; then
-        echo "IMPROVED! Committing changes."
+        echo "IMPROVED! Keeping changes."
         best_pass_rate="$current_pass_rate"
         stale_count=0
-        git add -A
-        git commit -m "iter ${iteration}: pass_rate=${current_pass_rate} - ${changes_desc}" 2>/dev/null || true
-        status="IMPROVED (committed)"
+        BEST_SNAPSHOT="$iter_snapshot"
+        status="IMPROVED (kept)"
     else
-        echo "No improvement. Reverting changes."
+        echo "No improvement. Reverting to best skill."
         stale_count=$((stale_count + 1))
-        git checkout -- "$SKILL_DIR/" 2>/dev/null || true
+        # Restore skill from best snapshot (preserve evals, only restore SKILL.md)
+        rm -rf "$SKILL_DIR"
+        cp -r "$BEST_SNAPSHOT" "$SKILL_DIR"
         status="REVERTED (no improvement)"
     fi
 
-    # Step 4: Write iteration to memory file
+    # Step 5: Write iteration to memory file
     {
         echo "--- ITERATION ${iteration} ---"
         echo "changes: ${changes_desc}"
         echo "pass_rate: ${current_pass_rate}"
         echo "passed: ${current_passed}"
         echo "status: ${status}"
+        echo "snapshot: ${iter_snapshot}"
         echo "per_eval:"
         format_per_eval
         echo "stale_count: ${stale_count}/${PATIENCE}"
@@ -146,7 +152,17 @@ for iteration in $(seq 1 "$MAX_ITERATIONS"); do
     echo "stale_count: ${stale_count}/${PATIENCE}"
     echo ""
 
-    # Step 5: Check convergence
+    # Step 6: Check for perfect score
+    if [ "$improved" = "yes" ] && python3 -c "exit(0 if float('${current_pass_rate}') >= 1.0 else 1)"; then
+        echo "Perfect score! All assertions passed."
+        {
+            echo "=== PERFECT SCORE ==="
+            echo "All evals passed at iteration ${iteration}. Stopping."
+        } >> "$MEMORY_FILE"
+        break
+    fi
+
+    # Step 7: Check convergence
     if [ "$stale_count" -ge "$PATIENCE" ]; then
         echo "Convergence reached: no improvement for ${PATIENCE} consecutive iterations."
         {
@@ -164,8 +180,11 @@ done
     echo ""
     echo "=== OPTIMIZATION COMPLETE ==="
     echo "Final best pass_rate: ${best_pass_rate}"
+    echo "Best snapshot: ${BEST_SNAPSHOT}"
+    echo "Optimized skill: ${SKILL_DIR}"
 } | tee -a "$MEMORY_FILE"
 
 echo ""
 echo "Memory log: ${MEMORY_FILE}"
+echo "Snapshots: ${SNAPSHOT_DIR}"
 echo "Latest metrics: ${METRICS_FILE}"
