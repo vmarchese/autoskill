@@ -1,0 +1,56 @@
+{
+  "skill_name": "text-summarizer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Summarize this article:\n\nClimate change is one of the most pressing challenges facing humanity today. The primary driver is the increase in greenhouse gas emissions, particularly carbon dioxide and methane, resulting from burning fossil fuels, deforestation, and industrial agriculture. Global temperatures have risen by approximately 1.1 degrees Celsius since pre-industrial times, leading to more frequent extreme weather events, rising sea levels, and disruptions to ecosystems worldwide. Scientists warn that without significant reductions in emissions by 2030, the world risks crossing critical tipping points that could trigger irreversible changes. Proposed solutions include transitioning to renewable energy sources, implementing carbon pricing mechanisms, protecting and restoring forests, and shifting to sustainable agricultural practices.",
+      "expected_output": "A bulleted list of 3-5 key points covering causes, effects, and proposed solutions of climate change.",
+      "assertions": [
+        "The output contains between 3 and 5 bullet points",
+        "Each bullet point is under 25 words",
+        "The summary mentions greenhouse gases or emissions as a cause",
+        "The summary mentions rising temperatures or warming as an effect",
+        "The summary mentions at least one proposed solution such as renewable energy or carbon pricing",
+        "No information is fabricated that was not in the original text"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Give me a TL;DR of this:\n\nTechVision Inc. announced today the launch of its new augmented reality headset, the VisionPro X2, scheduled for release on March 15, 2026. The device features a 4K micro-OLED display per eye, a custom-designed spatial computing chip called the T3 processor, and weighs just 320 grams. Priced at $1,499 for the base model, the VisionPro X2 targets both enterprise users for remote collaboration and consumers interested in immersive gaming and entertainment. Early reviews from tech journalists have praised its comfort and display quality while noting its limited 3-hour battery life as a drawback.",
+      "expected_output": "A brief bulleted summary covering the product, release date, key features, and notable limitations.",
+      "assertions": [
+        "The output contains between 3 and 5 bullet points",
+        "The summary mentions the product name VisionPro X2",
+        "The summary mentions the release date or March 2026",
+        "The summary mentions at least one key spec such as 4K display, T3 processor, or weight",
+        "The summary mentions the price of $1,499",
+        "The output is shorter than the input text"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "What are the key takeaways from this?\n\nRust has emerged as one of the most loved programming languages according to developer surveys for eight consecutive years. Originally developed by Mozilla, Rust is designed to provide memory safety without garbage collection through its unique ownership system. The language is increasingly being adopted for systems programming, WebAssembly applications, and even operating system kernels — notably, the Linux kernel has begun accepting Rust code for new driver development. Rust's package manager Cargo and its strong type system have been praised for improving developer productivity, while its steep learning curve remains a barrier for newcomers. Major companies including Microsoft, Google, Amazon, and Meta have invested significantly in Rust for performance-critical infrastructure.",
+      "expected_output": "Bullet points covering Rust's popularity, key features, adoption areas, and challenges.",
+      "assertions": [
+        "The output is in bullet-point format",
+        "The output contains between 3 and 5 bullet points",
+        "The summary mentions Rust by name",
+        "The summary mentions memory safety or the ownership system as a distinguishing feature",
+        "The summary mentions at least one adoption area such as systems programming, WebAssembly, or Linux kernel",
+        "The summary does not exceed 100 words total"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Summarize the following:\n\nA new study published in the journal Nature found that regular exercise can reduce the risk of developing dementia by up to 35 percent. Researchers tracked over 78,000 participants aged 40 to 79 over a period of seven years. The study found that even moderate physical activity, such as brisk walking for 30 minutes five times a week, provided significant cognitive benefits. The protective effect was observed across all age groups and was independent of other risk factors such as genetics, diet, and pre-existing conditions. Lead researcher Dr. Sarah Chen noted that the findings suggest exercise promotes neuroplasticity and increases blood flow to the brain.",
+      "expected_output": "A bulleted summary of the study's findings, methodology, and implications.",
+      "assertions": [
+        "The output contains between 3 and 5 bullet points",
+        "The summary mentions the 35 percent risk reduction",
+        "The summary mentions the study tracked participants or mentions the sample size",
+        "The summary mentions a mechanism such as neuroplasticity or blood flow to the brain",
+        "No information is fabricated that was not in the original text"
+      ]
+    }
+  ]
+}
