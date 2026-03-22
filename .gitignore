@@ -14,5 +14,3 @@ wheels/
 runs/
 run.txt
 
-# Skill folder (optimized at runtime, snapshots saved in runs/)
-skill/
