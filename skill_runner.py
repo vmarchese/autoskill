@@ -13,37 +13,26 @@ import json
 import os
 import re
 import sys
+import warnings
 from pathlib import Path
 
-import yaml
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.skills import Skill, load_skill_from_dir
+from google.adk.tools.skill_toolset import SkillToolset
 from google.genai import types
+
+# SkillToolset is flagged experimental in ADK 1.27; silence the UserWarning once.
+warnings.filterwarnings(
+    "ignore",
+    message=r".*SKILL_TOOLSET.*",
+    category=UserWarning,
+)
 
 # Default timeout in seconds for LiteLLM API calls
 DEFAULT_TIMEOUT = 120
-
-
-def parse_skill_md(skill_dir: Path) -> dict:
-    """Parse SKILL.md frontmatter and body into a dict."""
-    skill_path = skill_dir / "SKILL.md"
-    text = skill_path.read_text()
-
-    # Split YAML frontmatter from body
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return {"name": skill_dir.name, "description": "", "instruction": text}
-
-    frontmatter = yaml.safe_load(parts[1]) or {}
-    body = parts[2].strip()
-
-    return {
-        "name": frontmatter.get("name", skill_dir.name),
-        "description": frontmatter.get("description", ""),
-        "instruction": body,
-    }
 
 
 def load_evals(skill_dir: Path) -> list[dict]:
@@ -55,7 +44,7 @@ def load_evals(skill_dir: Path) -> list[dict]:
 
 async def run_single_eval(
     eval_case: dict,
-    skill_instruction: str,
+    skill: Skill,
     model: str,
     timeout: int = DEFAULT_TIMEOUT,
 ) -> dict:
@@ -63,7 +52,7 @@ async def run_single_eval(
     agent = LlmAgent(
         model=LiteLlm(model=model, timeout=timeout),
         name="skill_agent",
-        instruction=skill_instruction,
+        tools=[SkillToolset(skills=[skill])],
     )
     session_service = InMemorySessionService()
     runner = Runner(
@@ -169,7 +158,7 @@ async def grade_assertion(
 
 async def run_all_evals(skill_dir: str, model: str, output_path: str, timeout: int = DEFAULT_TIMEOUT):
     """Main orchestration: run all evals, grade, compute metrics."""
-    skill_data = parse_skill_md(Path(skill_dir))
+    skill = load_skill_from_dir(skill_dir)
     evals = load_evals(Path(skill_dir))
 
     all_results = []
@@ -179,9 +168,7 @@ async def run_all_evals(skill_dir: str, model: str, output_path: str, timeout: i
     for eval_case in evals:
         print(f"  Running eval {eval_case['id']}...", file=sys.stderr)
 
-        result = await run_single_eval(
-            eval_case, skill_data["instruction"], model, timeout
-        )
+        result = await run_single_eval(eval_case, skill, model, timeout)
 
         assertion_results = []
         for assertion in eval_case.get("assertions", []):
