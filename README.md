@@ -11,8 +11,8 @@ An automatic Skill optimizer inspired by [Karpathy's autoresearch loop](https://
 │  1. Claude Code reads SKILL.md + eval results   │
 │  2. Claude Code proposes & implements changes   │
 │  3. Skill runner evaluates against evals        │
-│  4. If improved → git commit                   │
-│     If not     → git revert                    │
+│  4. If improved → git commit                    │
+│     If not     → git revert                     │
 │  5. Repeat until convergence or max iterations  │
 └─────────────────────────────────────────────────┘
 ```
